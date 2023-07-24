@@ -2,30 +2,32 @@
   "name": "binance-futures-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "node test/response/tradingview-response.js"
+    "devT": "nodemon --ignore '*.json' app.js",
+    "auto": "supervisor app.js",
+
+    "si": "node tests/si_test.js",
+    "tr": "node tests/tr_test.js",
+    "ma": "node tests/ma_test.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.4.0",
-    "chai": "^4.3.7",
+    "dotenv": "^16.3.1",
     "eslint": "^8.45.0",
     "express": "^4.18.2",
     "fs": "^0.0.1-security",
-    "mocha": "^10.2.0",
     "node-binance-api": "^0.13.1",
-    "nyc": "^15.1.0",
     "path": "^0.12.7",
-    "request": "^2.88.2",
-    "winston": "^3.10.0",
-    "ws": "^8.13.0"
+    "winston": "^3.10.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "supervisor": "^0.12.0"
   }
 }

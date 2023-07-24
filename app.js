@@ -1,28 +1,34 @@
+/**
+ * Trading bot [BINANCE FUTURES]
+ * Creator: @folleant
+ * Url Creator: https://kwork.ru/user/folleant
+ * 
+ * Date: 06.07.2023
+ */
+
 const express = require('express')
-const path = require('path')
+const logger = require('./utils/logger')
+const appRoute = require('./routes/mainRoute')
 
-const logger = require('./modules/logging/logger')
-
-const appRoutes = require('./routes/mainRoutes')
-
-const { SERVER_PORT, SERVER_HOST } = require('./configuration/config')
+require('dotenv').config()
 
 const app = express()
-
 app.use(express.json())
-app.use('/v3', appRoutes)
+app.use('/v3', appRoute)
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, './templates/index.html'));
-    logger.info(`✔️ Стартовая страница была открыта!.`);
+
+// MAIN URL
+app.get('/', () => {
+    console.log('Open main route!')
 })
 
 
-app.listen(SERVER_PORT, () => {
+// OUTPUT
+app.listen(process.env.SERVER_PORT, () => {
     try {
-        console.log(`Trading Bot is running at [${SERVER_HOST}]`)
-        logger.info(`✔️ Торговый бот успешно запущен! Адрес: [${SERVER_HOST}]`)
+        console.log(`Starting server... ${process.env.SERVER_HOST}`)
+        logger.info('✔️ Бот, ожидает запрос...')
     } catch (err) {
-        logger.error(`❌ Ошибка при запуске торгового бота! Ошибка: ${err.message}`)
+        logger.error(`❌ Ошибка, при запуске...\n${err.message}`)
     }
 })

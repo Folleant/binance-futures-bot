@@ -1,15 +1,15 @@
 const Binance = require('node-binance-api')
-const config = require('../../configuration/config')
+require('dotenv').config()
 
 
 const binance = new Binance().options({
-    APIKEY: config.API_KEY,
-    APISECRET: config.API_SECRET,
+    APIKEY: process.env.API_KEY,
+    APISECRET: process.env.API_SECRET,
     test: true,
     recvWindow: 60000,
-    //verbose: true,
+    // verbose: true,
     log: log => {
-        console.log(log);
+        console.log(log)
     }
 })
 

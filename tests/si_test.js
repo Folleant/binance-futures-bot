@@ -1,7 +1,7 @@
 const axios = require('axios')
+require('dotenv').config()
 
-//const url = 'http://localhost:3000/v3/view';
-const url = 'https://radically-easy-hookworm.ngrok-free.app/v3/view'
+const URL = process.env.SERVER_HOST
 
 const data = {
     exchange: 'BINANCE',
@@ -9,11 +9,11 @@ const data = {
     timeframe: '1h',
     indicator: 'SI',
     value: 'BUY'
-};
+}
 
 async function run() {
     try {
-        const response = await axios.post(url, data);
+        const response = await axios.post(URL, data);
         console.log(response.data);
     } catch (err) {
         console.error(err);
