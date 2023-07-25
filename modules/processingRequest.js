@@ -3,10 +3,11 @@ const binance = require('../utils/binance')
 
 const { getTrendDirection, getLocalTrend, getcheckLocalTrends, getMovingAverage, getRecentSignals, getCurrentPrice } = require('../functions/checkConditions')
 const { openLongPosition, openShortPosition } = require('../functions/handlePosition')
+const { getSignalTR, getSignalMA } = require('../functions/getSignals')
 
 async function processingRequest(exchange, pair, timeframe, indicator, value) {
 
-    let quantity = 10
+    // let quantity = 10
 
     try {
 
@@ -18,6 +19,12 @@ async function processingRequest(exchange, pair, timeframe, indicator, value) {
 
         // Flag accepted all if
         let allConditionsPassed = true
+
+        // Getting signal data from json files
+        const getTR = await getSignalTR(pair, timeframe)
+        const getMA = await getSignalMA(pair, timeframe)
+        logger.info(`Testing getTR: ${getTR.trValue} ${getMA.maValue}`)
+
 
         // Checking conditions
         const checkTrend = async () => {

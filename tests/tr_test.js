@@ -8,7 +8,7 @@ const data = {
     pair: 'LTCUSDT',
     timeframe: '1h',
     indicator: 'TR',
-    value: -0.0336038195263384
+    value: '-0.0336038195263384'
 }
 
 async function run() {

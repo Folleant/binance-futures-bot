@@ -1,20 +1,20 @@
 {
   "name": "binance-futures-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Trading bot for Binance Futures. Trading by Trading View signals.",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "devT": "nodemon --ignore '*.json' app.js",
     "auto": "supervisor app.js",
 
+    "test": "node tests/test.js",
     "si": "node tests/si_test.js",
     "tr": "node tests/tr_test.js",
     "ma": "node tests/ma_test.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Folleant",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.4.0",
@@ -29,5 +29,8 @@
   "devDependencies": {
     "nodemon": "^3.0.1",
     "supervisor": "^0.12.0"
+  },
+  "nodemonConfig": {
+    "ignore": ["*.json"]
   }
 }
