@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "auto": "supervisor app.js",
-
+    "db": "node database/sqlRequest/createDatabase.js",
     "test": "node tests/test.js",
     "si": "node tests/si_test.js",
     "tr": "node tests/tr_test.js",
@@ -24,6 +23,7 @@
     "fs": "^0.0.1-security",
     "node-binance-api": "^0.13.1",
     "path": "^0.12.7",
+    "sqlite3": "^5.1.6",
     "winston": "^3.10.0"
   },
   "devDependencies": {
@@ -31,6 +31,8 @@
     "supervisor": "^0.12.0"
   },
   "nodemonConfig": {
-    "ignore": ["*.json"]
+    "ignore": [
+      "*.json"
+    ]
   }
 }
