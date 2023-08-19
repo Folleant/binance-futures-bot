@@ -14,7 +14,6 @@ const logger = require('./utils/logger')
 const appRoute = require('./routes/mainRoute')
 
 require('dotenv').config()
-require('http').globalAgent.maxSockets = 40
 
 const app = express()
 app.use(express.json())
@@ -34,9 +33,23 @@ const server = app.listen(process.env.SERVER_PORT, () => {
         logger.info('[✔️] Торговый бот запущен! Ожидаем запрос...')
 
         setInterval(() => {
-            request.get(`${process.env.SERVER_PING}`)
-            console.log(`Отправлен ping запрос на ${process.env.SERVER_PING}`)
-        }, 30000)
+            try {
+                request.get(`${process.env.SERVER_PING}/api/view`, (error, response, body) => {
+                    if (error) {
+                        if (error.code === 'ESOCKETTIMEDOUT') {
+                            console.error('[❌] Произошла ошибка ESOCKETTIMEDOUT при отправке запроса.')
+                        } else {
+                            console.error(`[❌] Произошла ошибка при отправке запроса: ${error.message}`)
+                        }
+                    } else {
+                        console.log(`Ответ на ping запрос: ${body}`)
+                    }
+                })
+                console.log(`Отправлен ping запрос на ${process.env.SERVER_PING}/api/view`)
+            } catch (err) {
+                console.error(`[❌] Ошибка, при выполнении запроса... \n${err.message}`)
+            }
+        }, 3000000)
     } catch (err) {
         logger.error(`[❌] Ошибка, при запуске торгового бота... \n${err.message}`)
     }
@@ -44,7 +57,7 @@ const server = app.listen(process.env.SERVER_PORT, () => {
 
 
 app.use((req, res, next) => {
-    res.setTimeout(60000 , () => {
+    res.setTimeout(600000 , () => {
         logger.error('[❌] Превышено время ожидания запроса')
         res.status(504).send('Timeout exceeded')
     })

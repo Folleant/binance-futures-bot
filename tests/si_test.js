@@ -4,21 +4,8 @@ const axios = require('axios')
 
 const URL = process.env.SERVER_HOST
 
-const data = {
-    exchange: 'BINANCE',
-    pair: 'LTCUSDT',
-    timeframe: '1h',
-    indicator: 'SI',
-    value: 'BUY'
-}
 
-const data2 = {
-    exchange: 'BINANCE',
-    pair: 'LTCUSDT',
-    timeframe: '1h',
-    indicator: 'SI',
-    value: 'SELL'
-}
+const data = 'BINANCE BTCUSDT 3h SI BUY'
 
 async function run() {
     try {

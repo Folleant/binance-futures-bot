@@ -6,8 +6,12 @@ require('dotenv').config()
 
 
 
+
+
 async function calculatePositionSize(bankSize) {
     const positionSize = bankSize / 10
+
+    logger.info(`POSITION SIZE CALCULATE: BANKSIZE: ${bankSize}: POSITION SIZE: ${positionSize}`)
 
     return positionSize
 }
@@ -56,14 +60,13 @@ async function setStopLoss(price, leverage, value, direction) {
     return stopLossPrice
 }
 
-
-async function setTakeProfit(price, leverage, direction) {
+async function setTakeProfit(price, leverage, value, direction) {
     const priceDiff = 0.1 * price / leverage
     let takeProfitPrice
 
-    if (direction === 'BUY') {
+    if (value === 'BUY' && direction === 'LONG') {
         takeProfitPrice = price + priceDiff
-    } else if (direction === 'SELL') {
+    } else if (value === 'SELL' && direction === 'SHORT') {
         takeProfitPrice = price - priceDiff
     } else {
         logger.error('[❌] TAKE-PROFIT: Неизвестное значение, ошибка')
@@ -83,29 +86,109 @@ async function openLongPosition(pair, direction, positionSize, pricePosition, le
         const getLeverage = leverageCurrent // плечо
         const stopLoss = stopLossPrice // стоп-лосс
         const takeProfit = takeProfitPrice // тейк-профит
+        const quantity = amount / symbolPrice
+
+        logger.info(`
+            [SYMBOL]: ${symbol},
+            [SIDE]: ${side},
+            [AMOUNT]: ${amount},
+            [SYMBOLPRICE]: ${symbolPrice},
+            [LEVERAGE]: ${getLeverage},
+            [STOPLOSS]: ${stopLoss},
+            [TAKEPROFIT]: ${takeProfit},
+            [QUANTITY]: ${quantity}
+        `)
 
         await binance.futuresLeverage(symbol, getLeverage)
         logger.info('Установка плеча...')
 
-        const positionResponse = await binance.futuresMarketBuy(symbol, amount)
+        const positionResponse = await binance.futuresMarketBuy(symbol, quantity)
         const positionId = positionResponse.clientOrderId
-        logger.info('Открытие позиции...')
+        logger.info(`Открытие позиции...:`)
+        console.log(positionResponse)
 
-        const sell = await binance.futuresMarketSell(symbol, amount, {
+        const sell = await binance.futuresMarketSell(symbol, quantity, {
             type: "STOP_MARKET",
             stopPrice: stopLoss,
             newClientOrderId: positionId + '-SL',
             closePosition: true
         })
-        logger.info('Установка Стоп-лосс...')
+        logger.info(`Установка Стоп-лосс...`)
+        console.log(sell)
 
-        const take = await binance.futuresMarketSell(symbol, amount, {
+        const take = await binance.futuresMarketSell(symbol, quantity, {
+            type: "TAKE_PROFIT_MARKET",
+            stopPrice: takeProfit,
+            newClientOrderId: positionId + '-TP',
+            closePosition: true
+        })
+        logger.info(`Установка Тейк-профита...`)
+        console.log(take)
+
+        const stopLossOrderId = sell.clientOrderId
+        const takeProfitOrderId = take.clientOrderId
+        await binance.futuresCancel(symbol, stopLossOrderId)
+        await binance.futuresCancel(symbol, takeProfitOrderId)
+
+        logger.info('[✔️] LONG позиция была успешно открыта!')
+        console.log(`ID POSITION: `, positionId)
+
+        return positionResponse
+    } catch (err) {
+        logger.error(`[❌] Ошибка при открытие позиции LONG: ${err.stack}`)
+    }
+}
+
+
+/* async function openLongPosition(pair, direction, positionSize, pricePosition, leverageCurrent, stopLossPrice, takeProfitPrice) {
+    try {
+        const symbol = pair // торговая пара
+        const side = direction // направление
+        const amount = positionSize // цена входа
+        const symbolPrice = pricePosition // цена пары
+        const getLeverage = leverageCurrent // плечо
+        const stopLoss = stopLossPrice // стоп-лосс
+        const takeProfit = takeProfitPrice // тейк-профит
+        const quantity = amount / symbolPrice
+
+        logger.info(`
+            [SYMBOL]: ${symbol},
+            [SIDE]: ${side},
+            [AMOUNT]: ${amount},
+            [SYMBOLPRICE]: ${symbolPrice},
+            [LEVERAGE]: ${getLeverage},
+            [STOPLOSS]: ${stopLoss},
+            [TAKEPROFIT]: ${takeProfit},
+            [QUANTITY]: ${quantity}
+        `)
+
+        const leveles = await binance.futuresLeverage(symbol, getLeverage)
+        logger.info('Установка плеча...')
+        logger.info(leveles)
+
+        const positionResponse = await binance.futuresMarketBuy(symbol, quantity)
+        const positionId = positionResponse.clientOrderId
+        logger.info(positionResponse)
+        logger.info('Открытие позиции...')
+        
+
+        const sell = await binance.futuresMarketSell(symbol, quantity, {
+            type: "STOP_MARKET",
+            stopPrice: stopLoss,
+            newClientOrderId: positionId + '-SL',
+            closePosition: true``
+        })
+        logger.info('Установка Стоп-лосс...')
+        logger.info(sell)
+
+        const take = await binance.futuresMarketSell(symbol, quantity, {
             type: "TAKE_PROFIT_MARKET",
             stopPrice: takeProfit,
             newClientOrderId: positionId + '-TP',
             closePosition: true
         })
         logger.info('Установка Тейк-профита...')
+        logger.info(take)
 
         const stopLossOrderId = sell.clientOrderId
         const takeProfitOrderId = take.clientOrderId
@@ -119,7 +202,7 @@ async function openLongPosition(pair, direction, positionSize, pricePosition, le
     } catch (err) {
         logger.error(`[❌] Ошибка при открытие позиции LONG: ${err}`)
     }
-}
+} */
 
 
 async function openShortPosition(pair, direction, positionSize, pricePosition, leverageCurrent, stopLossPrice, takeProfitPrice) {

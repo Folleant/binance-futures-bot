@@ -1,15 +1,12 @@
-const axios = require('axios')
+
 require('dotenv').config()
+
+const axios = require('axios')
 
 const URL = process.env.SERVER_HOST
 
-const data = {
-    exchange: 'BINANCE',
-    pair: 'BTCUSDT',
-    timeframe: '3h',
-    indicator: 'TR',
-    value: '-0.0336038195263384'
-}
+
+const data = 'BINANCE BTCUSDT 1d TR -0.0336038195263384'
 
 async function run() {
     try {
@@ -19,5 +16,6 @@ async function run() {
         console.error(err);
     }
 }
+
 
 run();
