@@ -5,8 +5,8 @@ const URL = process.env.SERVER_HOST
 
 const data = {
     exchange: 'BINANCE',
-    pair: 'LTCUSDT',
-    timeframe: '1h',
+    pair: 'BTCUSDT',
+    timeframe: '3h',
     indicator: 'TR',
     value: '-0.0336038195263384'
 }

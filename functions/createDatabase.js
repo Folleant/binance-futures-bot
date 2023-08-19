@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3').verbose()
 
+
 const db = new sqlite3.Database('./database/binFutures.db', (err) => {
     if (err) {
         console.error('Error opening database:', err.message)
@@ -15,7 +16,7 @@ function createTables() {
       // Create TR signals table
       db.run(`
         CREATE TABLE IF NOT EXISTS tr_signals (
-          id INTEGER PRIMARY KEY,
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
           exchange TEXT,
           pair TEXT,
           timeframe TEXT,
@@ -28,7 +29,7 @@ function createTables() {
       // Create MA signals table
       db.run(`
         CREATE TABLE IF NOT EXISTS ma_signals (
-          id INTEGER PRIMARY KEY,
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
           exchange TEXT,
           pair TEXT,
           timeframe TEXT,
@@ -41,12 +42,12 @@ function createTables() {
       // Create SI signals table
       db.run(`
         CREATE TABLE IF NOT EXISTS si_signals (
-          id INTEGER PRIMARY KEY,
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
           exchange TEXT,
           pair TEXT,
           timeframe TEXT,
           indicator TEXT,
-          value REAL,
+          value TEXT,
           datetime TEXT
         )
       `);
@@ -54,7 +55,7 @@ function createTables() {
       // Create open positions table
       db.run(`
         CREATE TABLE IF NOT EXISTS open_positions (
-          id INTEGER PRIMARY KEY,
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
           datetime TEXT,
           exchange TEXT,
           pair TEXT,
@@ -71,7 +72,7 @@ function createTables() {
       // Create closed positions table
       db.run(`
         CREATE TABLE IF NOT EXISTS closed_positions (
-          id INTEGER PRIMARY KEY,
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
           datetime TEXT,
           exchange TEXT,
           pair TEXT,

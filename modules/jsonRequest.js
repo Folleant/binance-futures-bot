@@ -41,7 +41,7 @@ async function checkingJsonRequest(exchange, pair, timeframe, indicator, value) 
                         logger.error('❌ Error when creating json and writing data to json', err)
                         return res.status(500).send('Error saving data to json')
                     }
-                    logger.info('✔️ Successful, the signal is saved in json')
+                    //logger.info('✔️ Successful, the signal is saved in json')
                 })
             } else {
                 logger.error('❌ Error when trying to read json', err)
@@ -57,7 +57,7 @@ async function checkingJsonRequest(exchange, pair, timeframe, indicator, value) 
                     logger.error('❌ Error when reading data from a file', err)
                     return res.status(500).send('Error when reading data from a file')
                 }
-                logger.info('✔️ The signal has been successfully saved to a file and read')
+                //logger.info('✔️ The signal has been successfully saved to a file and read')
             })
         }
     })

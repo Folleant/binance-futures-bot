@@ -16,11 +16,10 @@ async function getSignalTR(pair, timeframe) {
     if (!trSignal) {
         logger.error(`No TR signal found for pair ${pair} and timeframe ${timeframe}`)
         return
-    } else {
-        logger.info(`TR Signal value: ${trSignal.value}`)
     }
 
     return {
+        engine: trSignal,
         trValue: trSignal.value
     }
 }
@@ -39,8 +38,6 @@ async function getSignalMA(pair, timeframe) {
     if (!maSignal) {
         logger.error(`No TR signal found for pair ${pair} and timeframe ${timeframe}`)
         return
-    } else {
-        logger.info(`TR Signal value: ${maSignal.value}`)
     }
 
     return {

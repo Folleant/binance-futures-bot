@@ -1,41 +1,75 @@
 const logger = require('../utils/logger')
+const db = require('../functions/db')
 const { processingRequest } = require('./processingRequest')
-const { checkingJsonRequest } = require('./jsonRequest')
 
 
 const handleRequest = async (req, res) => {
     try {
-        // Receives and processes POST request
-        const { exchange, pair, timeframe, indicator, value } = req.body
-        logger.info('✔️ Successfully received the request')
+        const requestData = req.body
 
-        // Check the validity of the obtained data
-        if (exchange !== 'BINANCE') {
-            logger.error('❌ Exchange type invalid')
-            return res.status(400).send({ error: 'Error: Unsupported exchange' })
-        } else {
-            logger.info(`✔️ Exchange type valid: ${exchange}`)
+        if (!requestData) {
+            return res.status(400).json({ error: '[❌] No request data provided' })
         }
 
-        if (!['SI', 'TR', 'MA'].includes(indicator)) {
-            logger.error('❌ Indicator type invalid')
-            return res.status(400).send({ error: 'Error: Unsupported indicator' })
+        let requestArray = requestData
+
+        if (!Array.isArray(requestArray)) {
+            const signleRequest = [requestArray]
+            await processRequests(signleRequest)
         } else {
-            logger.info(`✔️ Indicator type valid: ${indicator}`)
+            await processRequests(requestArray)
         }
 
-        await checkingJsonRequest(exchange, pair, timeframe, indicator, value)
-
-        // Initialize the start of condition checking when SI signal is received
-        await processingRequest(exchange, pair, timeframe, indicator, value) // no await
-
-        res.status(200).json({ message: 'Request successfully processed' })
-
+        res.status(200).json({ message: '[✔️] Request successfully received and processed' })
     } catch (err) {
-        logger.error('❌ Request processing error', err)
-        res.status(500).send('Error: Request processing error')
+        logger.error(`[❌] Error in handling request: ${err}`);
+        res.status(500).send(`[❌] Error in receiving and processing the request ${err}`)
     }
 }
 
+async function processRequests(requestArray) {
+    await db.openDb()
+
+    for (const requestObject of requestArray) {
+        try {
+            const [exchange, pair, timeframe, indicator, value] = requestObject.split(' ')
+            logger.info('[✔️] Запрос был получен, обрабатываем...')
+            console.log(exchange, pair, timeframe, indicator, value)
+
+            if (exchange !== "BINANCE") {
+                logger.error(`[❌] Проверка валидности биржы, неподдерживаемое значение ${exchange}`)
+                return res.status(400).send({ error: '[❌] Unsupported exchange ${exchange}' })
+            } else {
+                logger.info(`[✔️] Проверка валидности биржы, успешно ${exchange}`)
+            }
+
+            if (!['SI', 'TR', 'MA'].includes(indicator)) {
+                logger.error(`[❌] Проверка валидности индикатора, неподдерживаемое значение ${exchange}`)
+                return res.status(400).send({ error: '[❌] Unsupported indicator' })
+            } else {
+                logger.info(`[✔️] Проверка валидности индикатора, успешно ${indicator}`)
+            }
+
+            if (['TR', 'MA'].includes(indicator)) {
+                logger.info(`[✔️] Запрос с индикатором: ${indicator}`)
+                await db.saveSignals(exchange, pair, timeframe, indicator, value)
+                logger.info(`[✔️] Сохранение запроса в базу данных [${indicator}], успешно`)
+            } else if (indicator === 'SI') {
+                logger.info(`[✔️] Запрос с индикатором: ${indicator}`)
+                await db.saveSignals(exchange, pair, timeframe, indicator, value)
+                logger.info(`[✔️] Сохранение запроса в базу данных [${indicator}], успешно`)
+                await processingRequest(exchange, pair, timeframe, indicator, value)
+            } else {
+                logger.error('[❌] Неизвестный индикатор, ошибка');
+            }
+
+        } catch (err) {
+            logger.error(`[❌] Ошибка при обработке запроса: ${err}`)
+        }
+    }
+
+    await db.closeDb()
+
+}
 
 module.exports = { handleRequest }

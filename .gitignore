@@ -5,3 +5,4 @@ node_modules/
 configuration/
 .config.js
 test/backup/
+*.env

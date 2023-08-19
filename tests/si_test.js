@@ -1,5 +1,6 @@
-const axios = require('axios')
 require('dotenv').config()
+
+const axios = require('axios')
 
 const URL = process.env.SERVER_HOST
 
@@ -11,6 +12,14 @@ const data = {
     value: 'BUY'
 }
 
+const data2 = {
+    exchange: 'BINANCE',
+    pair: 'LTCUSDT',
+    timeframe: '1h',
+    indicator: 'SI',
+    value: 'SELL'
+}
+
 async function run() {
     try {
         const response = await axios.post(URL, data);
@@ -19,5 +28,6 @@ async function run() {
         console.error(err);
     }
 }
+
 
 run();
