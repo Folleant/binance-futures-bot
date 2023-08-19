@@ -9,7 +9,7 @@
 
 const express = require('express')
 const request = require('request')
-const bodyParser = require('body-parser');
+const bodyParser = require('body-parser')
 const logger = require('./utils/logger')
 const appRoute = require('./routes/mainRoute')
 
@@ -27,6 +27,12 @@ app.get('/', (req, res) => {
 })
 
 
+app.get('/ping', (req, res) => {
+    console.log('Получен ping запрос');
+    res.send('Ping успешно выполнен');
+});
+
+
 const server = app.listen(process.env.SERVER_PORT, () => {
     try {
         console.log(`Starting server... ${process.env.SERVER_HOST}`)
@@ -34,7 +40,7 @@ const server = app.listen(process.env.SERVER_PORT, () => {
 
         setInterval(() => {
             try {
-                request.get(`${process.env.SERVER_PING}/api/view`, (error, response, body) => {
+                request.get(`${process.env.SERVER_PING}/ping`, (error, response, body) => {
                     if (error) {
                         if (error.code === 'ESOCKETTIMEDOUT') {
                             console.error('[❌] Произошла ошибка ESOCKETTIMEDOUT при отправке запроса.')
@@ -43,25 +49,29 @@ const server = app.listen(process.env.SERVER_PORT, () => {
                         }
                     } else {
                         console.log(`Ответ на ping запрос: ${body}`)
+                        lastRequestTime = Date.now() // Обновляем время последнего запроса
                     }
                 })
-                console.log(`Отправлен ping запрос на ${process.env.SERVER_PING}/api/view`)
+
+                console.log(`Отправлен ping запрос на ${process.env.SERVER_PING}/ping`)
+
+                // Проверяем, прошло ли более 90 минут с последнего запроса
+                const currentTime = Date.now()
+                const elapsedTime = currentTime - lastRequestTime
+                const maxElapsedTime = 90 * 60 * 1000 // 90 минут в миллисекундах
+                if (elapsedTime > maxElapsedTime) {
+                    console.log('[ℹ️] Прошло более 90 минут с последнего запроса. Перезапускаем сервер...')
+                    process.exit(0)
+                }
+
             } catch (err) {
                 console.error(`[❌] Ошибка, при выполнении запроса... \n${err.message}`)
             }
         }, 3000000)
+
     } catch (err) {
         logger.error(`[❌] Ошибка, при запуске торгового бота... \n${err.message}`)
     }
-})
-
-
-app.use((req, res, next) => {
-    res.setTimeout(600000 , () => {
-        logger.error('[❌] Превышено время ожидания запроса')
-        res.status(504).send('Timeout exceeded')
-    })
-    next()
 })
 
 
@@ -75,6 +85,6 @@ process.on('SIGTERM', () => {
     server.close(() => {
         logger.info('Сервер остановлен')
         process.exit(0)
-    })  
+    })
 })
 

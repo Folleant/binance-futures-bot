@@ -1,6 +1,7 @@
 const db = require('../functions/db')
 const logger = require('../utils/logger')
 const binance = require('../utils/binance')
+const createRetryFunction = require('../utils/createRetryFunction')
 
 require('dotenv').config()
 
@@ -10,8 +11,6 @@ require('dotenv').config()
 
 async function calculatePositionSize(bankSize) {
     const positionSize = bankSize / 10
-
-    logger.info(`POSITION SIZE CALCULATE: BANKSIZE: ${bankSize}: POSITION SIZE: ${positionSize}`)
 
     return positionSize
 }
@@ -99,11 +98,11 @@ async function openLongPosition(pair, direction, positionSize, pricePosition, le
         const amount = positionSize // цена входа
         const symbolPrice = pricePosition // цена пары
         const getLeverage = leverageCurrent // плечо
-        const stopLoss = stopLossPrice.toFixed(8)
-        const takeProfit = takeProfitPrice.toFixed(8)  // тейк-профит
+        const stopLoss = stopLossPrice.toFixed(3)
+        const takeProfit = takeProfitPrice  // тейк-профит
         //const quantity = amount / symbolPrice
         //const sum = amount / symbolPrice
-        const quantity = amount.toFixed(8)
+        const quantity = amount
 
         logger.info(`
             [SYMBOL]: ${symbol},
@@ -116,36 +115,74 @@ async function openLongPosition(pair, direction, positionSize, pricePosition, le
             [QUANTITY]: ${quantity}
         `)
 
-        await binance.futuresLeverage(symbol, getLeverage)
+        const setLeverage = async () => {
+            return binance.futuresLeverage(symbol, getLeverage)
+        }
+        await createRetryFunction(setLeverage, process.env.MAX_RETRIES, process.env.RETRY_DELAY)
         logger.info('Установка плеча...')
+        //await binance.futuresLeverage(symbol, getLeverage, { timeout: 50000 })
 
-        const positionResponse = await binance.futuresMarketBuy(symbol, quantity, { timeout: 50000 })
+        const openPosition = async () => {
+            return binance.futuresMarketBuy(symbol, quantity)
+        }
+        const positionResponse = await createRetryFunction(openPosition, process.env.MAX_RETRIES, process.env.RETRY_DELAY)
+        //const positionResponse = await binance.futuresMarketBuy(symbol, quantity, { timeout: 50000 })
         const positionId = positionResponse.clientOrderId
         logger.info(`Открытие позиции...:`)
         console.log(positionResponse)
 
-        const sell = await binance.futuresMarketSell(symbol, quantity, {
+        const openStopLoss = async () => {
+            return binance.futuresMarketSell(symbol, quantity, {
+                type: "STOP_MARKET",
+                stopPrice: stopLoss,
+                newClientOrderId: positionId + '-SL',
+                closePosition: true
+            })
+        }
+        const sell = await createRetryFunction(openStopLoss, process.env.MAX_RETRIES, process.env.RETRY_DELAY)
+
+        /* const sell = await binance.futuresMarketSell(symbol, quantity, {
             type: "STOP_MARKET",
             stopPrice: stopLoss,
             newClientOrderId: positionId + '-SL',
             closePosition: true
-        }, { timeout: 50000 })
+        }, { timeout: 50000 }) */
         logger.info(`Установка Стоп-лосс...`)
         console.log(sell)
 
-        const take = await binance.futuresMarketSell(symbol, quantity, {
+
+        const openTakeProfit = async () => {
+            return binance.futuresMarketSell(symbol, quantity, {
+                type: "TAKE_PROFIT_MARKET",
+                stopPrice: takeProfit,
+                newClientOrderId: positionId + '-TP',
+                closePosition: true
+            })
+        }
+        const take = await createRetryFunction(openTakeProfit, process.env.MAX_RETRIES, process.env.RETRY_DELAY)
+        /* const take = await binance.futuresMarketSell(symbol, quantity, {
             type: "TAKE_PROFIT_MARKET",
             stopPrice: takeProfit,
             newClientOrderId: positionId + '-TP',
             closePosition: true
-        }, { timeout: 50000 })
+        }, { timeout: 50000 }) */
         logger.info(`Установка Тейк-профита...`)
         console.log(take)
 
         const stopLossOrderId = sell.clientOrderId
         const takeProfitOrderId = take.clientOrderId
-        await binance.futuresCancel(symbol, stopLossOrderId)
-        await binance.futuresCancel(symbol, takeProfitOrderId)
+
+        const stopCancel = async () => {
+            return binance.futuresCancel(symbol, stopLossOrderId)
+        }
+        await createRetryFunction(stopCancel, process.env.MAX_RETRIES, process.env.RETRY_DELAY)
+
+        const takeCancel = async () => {
+            return binance.futuresCancel(symbol, takeProfitOrderId)
+        }
+        await createRetryFunction(takeCancel, process.env.MAX_RETRIES, process.env.RETRY_DELAY)
+        /* await binance.futuresCancel(symbol, stopLossOrderId)
+        await binance.futuresCancel(symbol, takeProfitOrderId) */
 
         logger.info('[✔️] LONG позиция была успешно открыта!')
         console.log(`ID POSITION: `, positionId)
@@ -155,71 +192,6 @@ async function openLongPosition(pair, direction, positionSize, pricePosition, le
         logger.error(`[❌] Ошибка при открытие позиции LONG: ${err.stack}`)
     }
 }
-
-
-/* async function openLongPosition(pair, direction, positionSize, pricePosition, leverageCurrent, stopLossPrice, takeProfitPrice) {
-    try {
-        const symbol = pair // торговая пара
-        const side = direction // направление
-        const amount = positionSize // цена входа
-        const symbolPrice = pricePosition // цена пары
-        const getLeverage = leverageCurrent // плечо
-        const stopLoss = stopLossPrice // стоп-лосс
-        const takeProfit = takeProfitPrice // тейк-профит
-        const quantity = amount / symbolPrice
-
-        logger.info(`
-            [SYMBOL]: ${symbol},
-            [SIDE]: ${side},
-            [AMOUNT]: ${amount},
-            [SYMBOLPRICE]: ${symbolPrice},
-            [LEVERAGE]: ${getLeverage},
-            [STOPLOSS]: ${stopLoss},
-            [TAKEPROFIT]: ${takeProfit},
-            [QUANTITY]: ${quantity}
-        `)
-
-        const leveles = await binance.futuresLeverage(symbol, getLeverage)
-        logger.info('Установка плеча...')
-        logger.info(leveles)
-
-        const positionResponse = await binance.futuresMarketBuy(symbol, quantity)
-        const positionId = positionResponse.clientOrderId
-        logger.info(positionResponse)
-        logger.info('Открытие позиции...')
-        
-
-        const sell = await binance.futuresMarketSell(symbol, quantity, {
-            type: "STOP_MARKET",
-            stopPrice: stopLoss,
-            newClientOrderId: positionId + '-SL',
-            closePosition: true``
-        })
-        logger.info('Установка Стоп-лосс...')
-        logger.info(sell)
-
-        const take = await binance.futuresMarketSell(symbol, quantity, {
-            type: "TAKE_PROFIT_MARKET",
-            stopPrice: takeProfit,
-            newClientOrderId: positionId + '-TP',
-            closePosition: true
-        })
-        logger.info('Установка Тейк-профита...')
-        logger.info(take)
-
-        const stopLossOrderId = sell.clientOrderId
-        const takeProfitOrderId = take.clientOrderId
-        await binance.futuresCancel(symbol, stopLossOrderId)
-        await binance.futuresCancel(symbol, takeProfitOrderId)
-
-        logger.info('[✔️] LONG позиция была успешно открыта!')
-        logger.info(`ID Позиции: ${positionId}`)
-
-        return positionResponse
-    } catch (err) {
-        logger.error(`[❌] Ошибка при открытие позиции LONG: ${err}`)
-    }
-} */
 
 
 async function openShortPosition(pair, direction, positionSize, pricePosition, leverageCurrent, stopLossPrice, takeProfitPrice) {

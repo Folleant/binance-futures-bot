@@ -6,7 +6,7 @@ const binance = new Binance().options({
     APIKEY: process.env.API_KEY,
     APISECRET: process.env.API_SECRET,
     test: true,
-    apiTimeout: 60000
+    apiTimeout: 180000,
     //recvWindow: 60000,
     //useServerTime: true,
     // verbose: true,

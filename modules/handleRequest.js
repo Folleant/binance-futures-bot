@@ -2,6 +2,7 @@ const logger = require('../utils/logger')
 const db = require('../functions/db')
 const { processingRequest } = require('./processingRequest')
 
+require('dotenv').config()
 
 const handleRequest = async (req, res) => {
     try {
@@ -22,7 +23,7 @@ const handleRequest = async (req, res) => {
 
         res.status(200).json({ message: '[✔️] Request successfully received and processed' })
     } catch (err) {
-        logger.error(`[❌] Error in handling request: ${err}`);
+        logger.error(`[❌] Error in handling request: ${err}`)
         res.status(500).send(`[❌] Error in receiving and processing the request ${err}`)
     }
 }
@@ -52,17 +53,27 @@ async function processRequests(requestArray) {
 
             if (['TR', 'MA'].includes(indicator)) {
                 logger.info(`[✔️] Запрос с индикатором: ${indicator}`)
-                await db.saveSignals(exchange, pair, timeframe, indicator, value)
-                logger.info(`[✔️] Сохранение запроса в базу данных [${indicator}], успешно`)
+                try {
+                    await db.saveSignals(exchange, pair, timeframe, indicator, value)
+                    logger.info(`[✔️] Сохранение запроса в базу данных [${indicator}], успешно`)
+                } catch (err) {
+                    logger.error(`[❌] Ошибка при сохранение запроса в базу: ${err}`)
+                }
             } else if (indicator === 'SI') {
                 logger.info(`[✔️] Запрос с индикатором: ${indicator}`)
-                await db.saveSignals(exchange, pair, timeframe, indicator, value)
-                logger.info(`[✔️] Сохранение запроса в базу данных [${indicator}], успешно`)
-                await processingRequest(exchange, pair, timeframe, indicator, value)
+                try {
+                    await db.saveSignals(exchange, pair, timeframe, indicator, value)
+                    logger.info(`[✔️] Сохранение запроса в базу данных [${indicator}], успешно`)
+
+                    await processingRequest(exchange, pair, timeframe, indicator, value)
+                } catch (err) {
+                    logger.error(`[❌] Ошибка при сохранение запроса в базу или запуска проверки: ${err}`)
+                }
             } else {
-                logger.error('[❌] Неизвестный индикатор, ошибка');
+                logger.error('[❌] Неизвестный индикатор, ошибка')
             }
 
+            await new Promise(resolve => setTimeout(resolve, process.env.DELAY_BETWEEN_REQUESTS))
         } catch (err) {
             logger.error(`[❌] Ошибка при обработке запроса: ${err}`)
         }

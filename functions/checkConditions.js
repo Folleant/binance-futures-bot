@@ -1,8 +1,9 @@
 const db = require('../functions/db')
 const logger = require('../utils/logger')
 const binance = require('../utils/binance')
+const createRetryFunction = require('../utils/createRetryFunction')
 const { getSignalTR, getSignalMA } = require('./getSignalsdb')
-
+require('dotenv').config()
 
 
 async function checkConditions(pair, timeframe, value) {
@@ -143,24 +144,17 @@ async function getOpenPositions(pair, timeframe) {
 
 
 async function getCurrentPrice(pair) {
-    let prices
-    try {
-        prices = await binance.futuresPrices()
-    } catch (err) {
-        if (err.message === 'ESOCKETTIMEDOUT') {
-            prices = await binance.futuresPrices()
-        } else {
-            throw err
+    return createRetryFunction(async () => {
+        const prices = await binance.futuresPrices()
+        const ticker = prices[pair]
+        if (!ticker) {
+            logger.error(`[❌] Ошибка получения цены для торговой пары ${pair}`)
+            return null
         }
-    }
-    const ticker = prices[pair]
-    if (!ticker) {
-        logger.error(`[❌] Ошибка получения цены для торговой пары ${pair}`)
-        return null
-    }
-    return {
-        priceCurrent: ticker
-    }
+        return {
+            priceCurrent: ticker
+        }
+    }, process.env.MAX_RETRIES, process.env.RETRY_DELAY)
 }
 
 

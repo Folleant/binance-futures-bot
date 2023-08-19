@@ -1,5 +1,5 @@
 require('dotenv').config()
-const binance = require('../utils/binance')
+
 const db = require('../functions/db')
 const logger = require('../utils/logger')
 const { checkConditions, getCurrentPrice } = require('../functions/checkConditions')
@@ -34,27 +34,9 @@ async function processingRequest(exchange, pair, timeframe, indicator, value) {
             const statusOpen = 'Открыта'
             const statusClosed = 'Закрыта'
 
-            logger.info('Попытка округления сум')
-            const exchangeInfo = await binance.futuresExchangeInfo()
-            const symbolInfo = exchangeInfo.symbols.find(s => s.symbol === pair)
-            const tickSize = symbolInfo.filters.find(f => f.filterType === 'PRICE_FILTER').tickSize
-
-            const roundedPrice = Math.round(pricePosition / parseFloat(tickSize)) * parseFloat(tickSize)
-            const roundedQuantity = Math.round(quantity / parseFloat(tickSize)) * parseFloat(tickSize)
-
-            const roundedStopLoss = Math.round(StopLoss / parseFloat(tickSize)) * parseFloat(tickSize)
-            const roundedTakeProfit = Math.round(TakeProfit / parseFloat(tickSize)) * parseFloat(tickSize)
-
-            logger.info(`
-                RoundedPrice: ${roundedPrice},
-                RoundedQuantity: ${roundedQuantity},
-                RoundedStopLoss: ${roundedStopLoss},
-                RoundedTakeProfit: ${roundedTakeProfit}
-            `)
-
 
             logger.info('[✔️] Проверка значений для открытия позиции:')
-            logger.info(`[✔️] Цена пары: ${pricePosition} | Размер плеча: ${leverageCurrent} | Цена входа: ${positionSize} | Направление: ${direction} | Цена стоп-лосса: ${StopLoss} | Цена тейк-профита: ${TakeProfit}`)
+            logger.info(`[✔️] Цена пары: ${pricePosition} | Размер плеча: ${leverageCurrent} | Сумма: ${positionSize} | Цена входа: ${quantity} | Направление: ${direction} | Цена стоп-лосса: ${StopLoss} | Цена тейк-профита: ${TakeProfit}`)
 
 
             if (indicator === 'SI' && value === 'BUY') {
