@@ -75,7 +75,8 @@ async function processRequests(requestArray) {
 
             await new Promise(resolve => setTimeout(resolve, process.env.DELAY_BETWEEN_REQUESTS))
         } catch (err) {
-            logger.error(`[❌] Ошибка при обработке запроса: ${err}`)
+            logger.error(`[❌] Ошибка при обработке запроса`)
+            return null
         }
     }
 

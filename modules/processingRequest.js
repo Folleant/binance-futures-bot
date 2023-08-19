@@ -48,13 +48,13 @@ async function processingRequest(exchange, pair, timeframe, indicator, value) {
                 const openCheck = await checkingReverseSignal(pair, timeframe, 'LONG')
 
                 if (openCheck.amountSignal > 0) {
-                    await db.closePositions(exchange, pair, 'LONG', timeframe, positionSize, pricePosition, leverageCurrent, 'Reverse Signal')
+                    await db.closePositions(exchange, pair, 'LONG', timeframe, quantity, pricePosition, leverageCurrent, 'Reverse Signal')
                     await db.updatePositions(pair, 'LONG', timeframe, statusClosed)
-                    await closePosition(pair, positionSize)
+                    await closePosition(pair, quantity)
                 } else {
                     logger.info('[✔️] Все значения установлены, открываем позицию')
-                    await openShortPosition(pair, direction, positionSize, pricePosition, leverageCurrent, StopLoss, TakeProfit)
-                    await db.savePositions(exchange, pair, direction, timeframe, positionSize, StopLoss, TakeProfit, leverageCurrent, statusOpen)
+                    await openShortPosition(pair, direction, quantity, pricePosition, leverageCurrent, StopLoss, TakeProfit)
+                    await db.savePositions(exchange, pair, direction, timeframe, quantity, StopLoss, TakeProfit, leverageCurrent, statusOpen)
                 }
 
             } else {
@@ -65,11 +65,11 @@ async function processingRequest(exchange, pair, timeframe, indicator, value) {
         }
 
         await db.closeDb()
-
+        logger.info('[i] Бот снова ожидает запроса...')
     } catch (err) {
         logger.error(`[❌] Error occurred while processing the request: ${err}`)
+        return null
     }
-
 }
 
 

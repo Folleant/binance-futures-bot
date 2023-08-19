@@ -31,79 +31,94 @@ module.exports = {
     },
 
     saveSignals: async (exchange, pair, timeframe, indicator, value) => {
-        await module.exports.openDb()
-        let sql, params
-        const datetime = new Date().toISOString()
-        const dt = moment(datetime).format('YYYY-MM-DD HH:mm:ss')
-
-        switch (indicator) {
-            case 'SI':
-                sql = `
-                INSERT INTO si_signals (exchange, pair, timeframe, indicator, value, datetime)
-                VALUES (?, ?, ?, ?, ?, ?) 
-            `
-                params = [exchange, pair, timeframe, indicator, value, dt]
-                break
-            case 'TR':
-                sql = `
-                    INSERT INTO tr_signals (exchange, pair, timeframe, indicator, value, datetime)
+        try {
+            await module.exports.openDb()
+            let sql, params
+            const datetime = new Date().toISOString()
+            const dt = moment(datetime).format('YYYY-MM-DD HH:mm:ss')
+    
+            switch (indicator) {
+                case 'SI':
+                    sql = `
+                    INSERT INTO si_signals (exchange, pair, timeframe, indicator, value, datetime)
                     VALUES (?, ?, ?, ?, ?, ?) 
                 `
-                params = [exchange, pair, timeframe, indicator, value, dt]
-                break
-            case 'MA':
-                sql = `
-                INSERT INTO ma_signals (exchange, pair, timeframe, indicator, value, datetime)
-                VALUES (?, ?, ?, ?, ?, ?) 
-            `
-                params = [exchange, pair, timeframe, indicator, value, dt]
-                break
+                    params = [exchange, pair, timeframe, indicator, value, dt]
+                    break
+                case 'TR':
+                    sql = `
+                        INSERT INTO tr_signals (exchange, pair, timeframe, indicator, value, datetime)
+                        VALUES (?, ?, ?, ?, ?, ?) 
+                    `
+                    params = [exchange, pair, timeframe, indicator, value, dt]
+                    break
+                case 'MA':
+                    sql = `
+                    INSERT INTO ma_signals (exchange, pair, timeframe, indicator, value, datetime)
+                    VALUES (?, ?, ?, ?, ?, ?) 
+                `
+                    params = [exchange, pair, timeframe, indicator, value, dt]
+                    break
+            }
+    
+            db.run(sql, params)
+        } catch (err) {
+            logger.error(`saveSignals: ${err}`)
         }
-
-        db.run(sql, params)
     },
 
     savePositions: async (exchange, pair, direction, timeframe, entry_price, stop_loss, take_profit, leverage, status) => {
-
-        await module.exports.openDb()
-        let sql, params
-        const datetime = new Date().toISOString()
-        const dt = moment(datetime).format('YYYY-MM-DD HH:mm:ss')
-
-        sql = `
-            INSERT INTO open_positions (datetime, exchange, pair, direction, timeframe, entry_price, stop_loss, take_profit, leverage, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `
-        params = [dt, exchange, pair, direction, timeframe, entry_price, stop_loss, take_profit, leverage, status]
-        
-        db.run(sql, params)
+        try {
+            await module.exports.openDb()
+            let sql, params
+            const datetime = new Date().toISOString()
+            const dt = moment(datetime).format('YYYY-MM-DD HH:mm:ss')
+    
+            sql = `
+                INSERT INTO open_positions (datetime, exchange, pair, direction, timeframe, entry_price, stop_loss, take_profit, leverage, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `
+            params = [dt, exchange, pair, direction, timeframe, entry_price, stop_loss, take_profit, leverage, status]
+            
+            db.run(sql, params)
+        } catch (err) {
+            logger.error(`savePosition: ${err}`)
+        }
     },
 
     updatePositions: async (pair, direction, timeframe, status) => {
-        await module.exports.openDb()
-        let sql, params
-
-        sql = `
-            UPDATE open_positions SET status = ? WHERE pair = ? AND direction = ? AND timeframe = ?
-        `
-        params = [status, pair, direction, timeframe]
-
-        db.run(sql, params)
+        try {
+            await module.exports.openDb()
+            let sql, params
+    
+            sql = `
+                UPDATE open_positions SET status = ? WHERE pair = ? AND direction = ? AND timeframe = ?
+            `
+            params = [status, pair, direction, timeframe]
+    
+            db.run(sql, params)
+        } catch (err) {
+            logger.error(`updatePosition: ${err}`)
+        }
     },
 
     closePositions: async (exchange, pair, direction, timeframe, entry_price, exit_price, leverage, exit_reason) => {
-        await module.exports.openDb()
-        let sql, params
-        const datetime = new Date().toISOString()
-        const dt = moment(datetime).format('YYYY-MM-DD HH:mm:ss')
-
-        sql = `
-            INSERT INTO closed_positions (datetime, exchange, pair, direction, timeframe, entry_price, exit_price, leverage, exit_reason)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `
-        params = [dt, exchange, pair, direction, timeframe, entry_price, exit_price, leverage, exit_reason]
-
-        db.run(sql, params)
+        try {
+            await module.exports.openDb()
+            let sql, params
+            const datetime = new Date().toISOString()
+            const dt = moment(datetime).format('YYYY-MM-DD HH:mm:ss')
+    
+            sql = `
+                INSERT INTO closed_positions (datetime, exchange, pair, direction, timeframe, entry_price, exit_price, leverage, exit_reason)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `
+            params = [dt, exchange, pair, direction, timeframe, entry_price, exit_price, leverage, exit_reason]
+    
+            db.run(sql, params)
+        } catch (err) {
+            logger.error(`closePosition: ${err}`)
+        }
     },
 
     get: async (sqlQuery, params) => {

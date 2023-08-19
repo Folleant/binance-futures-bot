@@ -8,7 +8,7 @@ const binance = new Binance().options({
     test: true,
     apiTimeout: 180000,
     //recvWindow: 60000,
-    //useServerTime: true,
+    useServerTime: true,
     // verbose: true,
 })
 
