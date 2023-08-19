@@ -76,6 +76,21 @@ async function setTakeProfit(price, leverage, value, direction) {
     return takeProfitPrice
 }
 
+/* async function setTakeProfit(price, leverage, direction) {
+    const priceDiff = 0.1 * price / leverage
+    let takeProfitPrice
+
+    if (direction === 'BUY') {
+        takeProfitPrice = price + priceDiff
+    } else if (direction === 'SELL') {
+        takeProfitPrice = price - priceDiff
+    } else {
+        logger.error('[❌] TAKE-PROFIT: Неизвестное значение, ошибка')
+        return { takeProfitPrice: null }
+    }
+
+    return takeProfitPrice
+} */
 
 async function openLongPosition(pair, direction, positionSize, pricePosition, leverageCurrent, stopLossPrice, takeProfitPrice) {
     try {
@@ -84,9 +99,11 @@ async function openLongPosition(pair, direction, positionSize, pricePosition, le
         const amount = positionSize // цена входа
         const symbolPrice = pricePosition // цена пары
         const getLeverage = leverageCurrent // плечо
-        const stopLoss = stopLossPrice // стоп-лосс
-        const takeProfit = takeProfitPrice // тейк-профит
-        const quantity = amount / symbolPrice
+        const stopLoss = stopLossPrice.toFixed(8)
+        const takeProfit = takeProfitPrice.toFixed(8)  // тейк-профит
+        //const quantity = amount / symbolPrice
+        //const sum = amount / symbolPrice
+        const quantity = amount.toFixed(8)
 
         logger.info(`
             [SYMBOL]: ${symbol},
@@ -102,7 +119,7 @@ async function openLongPosition(pair, direction, positionSize, pricePosition, le
         await binance.futuresLeverage(symbol, getLeverage)
         logger.info('Установка плеча...')
 
-        const positionResponse = await binance.futuresMarketBuy(symbol, quantity)
+        const positionResponse = await binance.futuresMarketBuy(symbol, quantity, { timeout: 50000 })
         const positionId = positionResponse.clientOrderId
         logger.info(`Открытие позиции...:`)
         console.log(positionResponse)
@@ -112,7 +129,7 @@ async function openLongPosition(pair, direction, positionSize, pricePosition, le
             stopPrice: stopLoss,
             newClientOrderId: positionId + '-SL',
             closePosition: true
-        })
+        }, { timeout: 50000 })
         logger.info(`Установка Стоп-лосс...`)
         console.log(sell)
 
@@ -121,7 +138,7 @@ async function openLongPosition(pair, direction, positionSize, pricePosition, le
             stopPrice: takeProfit,
             newClientOrderId: positionId + '-TP',
             closePosition: true
-        })
+        }, { timeout: 50000 })
         logger.info(`Установка Тейк-профита...`)
         console.log(take)
 

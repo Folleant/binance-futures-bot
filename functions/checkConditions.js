@@ -143,7 +143,16 @@ async function getOpenPositions(pair, timeframe) {
 
 
 async function getCurrentPrice(pair) {
-    const prices = await binance.futuresPrices()
+    let prices
+    try {
+        prices = await binance.futuresPrices()
+    } catch (err) {
+        if (err.message === 'ESOCKETTIMEDOUT') {
+            prices = await binance.futuresPrices()
+        } else {
+            throw err
+        }
+    }
     const ticker = prices[pair]
     if (!ticker) {
         logger.error(`[❌] Ошибка получения цены для торговой пары ${pair}`)
