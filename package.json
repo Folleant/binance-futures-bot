@@ -4,7 +4,7 @@
   "description": "Trading bot for Binance Futures. Trading by Trading View signals.",
   "main": "app.js",
   "scripts": {
-    "build": "npm i",
+    "build": "npm install",
     "start": "node app.js",
     "dev": "nodemon app.js",
     "db": "node functions/createDatabase.js",

@@ -65,7 +65,7 @@ async function processingRequest(exchange, pair, timeframe, indicator, value) {
         }
 
         await db.closeDb()
-        logger.info('[i] Бот снова ожидает запроса...')
+        logger.info('\n[i] Бот снова ожидает запроса...')
     } catch (err) {
         logger.error(`[❌] Error occurred while processing the request: ${err}`)
         return null

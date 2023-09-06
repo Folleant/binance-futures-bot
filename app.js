@@ -22,15 +22,9 @@ app.use('/v3', appRoute)
 
 // MAIN URL
 app.get('/', (req, res) => {
-    console.log('Главный маршрут!')
-    res.send('Главный маршрут работает!')
-})
-
-
-app.get('/ping', (req, res) => {
     console.log('Получен ping запрос');
     res.send('Ping успешно выполнен');
-});
+})
 
 
 const server = app.listen(process.env.SERVER_PORT, () => {
@@ -40,12 +34,12 @@ const server = app.listen(process.env.SERVER_PORT, () => {
 
         setInterval(() => {
             try {
-                request.get(`${process.env.SERVER_PING}/ping`, (error, response, body) => {
+                request.get(`${process.env.SERVER_PING}/`, (error, response, body) => {
                     if (error) {
                         if (error.code === 'ESOCKETTIMEDOUT') {
-                            console.error('[❌] Произошла ошибка ESOCKETTIMEDOUT при отправке запроса.')
+                            console.log('[❌] Произошла ошибка ESOCKETTIMEDOUT при отправке запроса.')
                         } else {
-                            console.error(`[❌] Произошла ошибка при отправке запроса: ${error.message}`)
+                            console.log(`[❌] Произошла ошибка при отправке запроса: ${error.message}`)
                         }
                     } else {
                         console.log(`Ответ на ping запрос: ${body}`)
@@ -53,7 +47,7 @@ const server = app.listen(process.env.SERVER_PORT, () => {
                     }
                 })
 
-                console.log(`Отправлен ping запрос на ${process.env.SERVER_PING}/ping`)
+                console.log(`Отправлен ping запрос на ${process.env.SERVER_PING}/`)
 
                 // Проверяем, прошло ли более 90 минут с последнего запроса
                 const currentTime = Date.now()
@@ -65,7 +59,7 @@ const server = app.listen(process.env.SERVER_PORT, () => {
                 }
 
             } catch (err) {
-                console.error(`[❌] Ошибка, при выполнении запроса... \n${err.message}`)
+                console.log(`[❌] Ошибка, при выполнении запроса... \n${err.message}`)
             }
         }, 3000000)
 

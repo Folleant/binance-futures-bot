@@ -1,14 +1,15 @@
 const Binance = require('node-binance-api')
 require('dotenv').config()
+const moment = require('moment')
 
+const timestamp = moment().valueOf()
 
 const binance = new Binance().options({
     APIKEY: process.env.API_KEY,
     APISECRET: process.env.API_SECRET,
-    test: true,
-    apiTimeout: 180000,
     //recvWindow: 60000,
-    useServerTime: true,
+    timestamp
+    //useServerTime: true,
     // verbose: true,
 })
 
